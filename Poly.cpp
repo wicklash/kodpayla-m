@@ -122,10 +122,6 @@ void DeletePoly(PolyNode* poly) {
 // Returns a pointer to the possibly new head of the polynomial.
 //
 PolyNode* AddNode(PolyNode* head, double coef, int exp) {
-    if (coef == 0.0) {
-        return head; // Skip terms with a coefficient of 0
-    }
-
     PolyNode* newNode = new PolyNode;
     newNode->coef = coef;
     newNode->exp = exp;
@@ -135,14 +131,19 @@ PolyNode* AddNode(PolyNode* head, double coef, int exp) {
         newNode->next = head;
         return newNode;
     }
+    if (exp == head->exp) {
+        head->coef += coef;
+        delete newNode;
+        return head;
+    }
 
     PolyNode* current = head;
-    while (current->next != nullptr && exp < current->next->exp) {
+    while (current->next != nullptr && current->next->exp > exp) {
         current = current->next;
     }
 
-    if (exp == current->exp) {
-        current->coef += coef;
+    if (current->next != nullptr && current->next->exp == exp) {
+        current->next->coef += coef;
         delete newNode;
     }
     else {
@@ -152,6 +153,7 @@ PolyNode* AddNode(PolyNode* head, double coef, int exp) {
 
     return head;
 }
+
 
 PolyNode* Add(PolyNode* poly1, PolyNode* poly2) {
     PolyNode* result = nullptr;
@@ -191,36 +193,98 @@ PolyNode* Add(PolyNode* poly1, PolyNode* poly2) {
 // Subtracts poly2 from poly1 and returns the resulting polynomial
 // Computes: poly3 = poly1 - poly2 and returns poly3
 //
-PolyNode *Subtract(PolyNode *poly1, PolyNode *poly2){
-	// Fill this in
-	return NULL;
-} //end-Substract
+PolyNode* Subtract(PolyNode* poly1, PolyNode* poly2) {
+    PolyNode* result = nullptr;
+
+    while (poly1 != nullptr || poly2 != nullptr) {
+        if (poly1 != nullptr && poly2 != nullptr) {
+            if (poly1->exp == poly2->exp) {
+                result = AddNode(result, poly1->coef - poly2->coef, poly1->exp);
+                poly1 = poly1->next;
+                poly2 = poly2->next;
+            }
+            else if (poly1->exp > poly2->exp) {
+                result = AddNode(result, poly1->coef, poly1->exp);
+                poly1 = poly1->next;
+            }
+            else {
+                result = AddNode(result, -poly2->coef, poly2->exp);
+                poly2 = poly2->next;
+            }
+        }
+        else if (poly1 != nullptr) {
+            result = AddNode(result, poly1->coef, poly1->exp);
+            poly1 = poly1->next;
+        }
+        else {
+            result = AddNode(result, -poly2->coef, poly2->exp);
+            poly2 = poly2->next;
+        }
+    }
+
+    return result;
+}
+
 
 //-------------------------------------------------
 // Multiplies poly1 and poly2 and returns the resulting polynomial
 // Computes: poly3 = poly1 * poly2 and returns poly3
 //
-PolyNode *Multiply(PolyNode *poly1, PolyNode *poly2){
-	// Fill this in
-	return NULL;
-} //end-Multiply
+PolyNode* Multiply(PolyNode* poly1, PolyNode* poly2) {
+    PolyNode* result = nullptr;
+
+    // Iterate through the terms of poly1
+    for (PolyNode* term1 = poly1; term1 != nullptr; term1 = term1->next) {
+        // Iterate through the terms of poly2
+        for (PolyNode* term2 = poly2; term2 != nullptr; term2 = term2->next) {
+            // Multiply coefficients and add exponents
+            double coef = term1->coef * term2->coef;
+            int exp = term1->exp + term2->exp;
+
+            // Add the term to the result polynomial
+            result = AddNode(result, coef, exp);
+        }
+    }
+
+    return result;
+}
+
 
 //-------------------------------------------------
 // Evaluates the polynomial at a particular "x" value and returns the result
 //
-double Evaluate(PolyNode *poly, double x){
-	// Fill this in
-	return 0;
-} //end-Evaluate
+double Evaluate(PolyNode* poly, double x) {
+    double result = 0.0;
+    PolyNode* current = poly;
+
+    while (current != nullptr) {
+        result += current->coef * pow(x, current->exp);
+        current = current->next;
+    }
+
+    return result;
+}
 
 //-------------------------------------------------
 // Computes the derivative of the polynomial and returns it
 // Ex: poly(x) = 3x^4 - 2x + 1-->Derivative(poly) = 12x^3 - 2
 //
-PolyNode *Derivative(PolyNode *poly){
-	// Fill this in
-	return NULL;
-} //end-Derivative
+PolyNode* Derivative(PolyNode* poly) {
+    PolyNode* derivative = nullptr;
+    PolyNode* current = poly;
+
+    while (current) {
+        if (current->exp > 0) {
+            double coef = current->exp * current->coef;
+            int exp = current->exp - 1;
+            derivative = AddNode(derivative, coef, exp);
+        }
+        current = current->next;
+    }
+
+    return derivative;
+}
+
 
 //-------------------------------------------------
 // Plots the polynomial in the range [x1, x2].
@@ -230,6 +294,44 @@ PolyNode *Derivative(PolyNode *poly){
 // During evaluation, if "y" value does not fit on the screen,
 // then just skip it. Otherwise put a '*' char depicting the curve
 //
-void Plot(PolyNode *poly, int x1, int x2){
-	// Fill this in	
-} //end-Plot
+void Plot(PolyNode* poly, int x1, int x2) {
+    const int minY = -12;
+    const int maxY = 12;
+    const int xAxis = 0;
+    const char axisChar = '+';
+    const char plotChar = '*';
+
+    for (int y = maxY; y >= minY; y--) {
+        for (int x = x1; x <= x2; x++) {
+            double result = Evaluate(poly, x);
+            if (result >= y - 0.5 && result < y + 0.5) {
+                if (x == xAxis && y == 0) {
+                    putchar(axisChar);
+                }
+                else if (y == 0) {
+                    putchar(axisChar);
+                }
+                else if (x == xAxis) {
+                    putchar(axisChar);
+                }
+                else {
+                    putchar(plotChar);
+                }
+            }
+            else if (y == minY && x == xAxis) {
+                putchar(axisChar);
+            }
+            else if (y == 0) {
+                putchar('-');
+            }
+            else if (x == xAxis) {
+                putchar('|');
+            }
+            else {
+                putchar(' ');
+            }
+        }
+        putchar('\n');
+    }
+}
+

@@ -1,0 +1,11 @@
+open_valve
+add_fuel_tank 60 1
+connect_fuel_tank_to_engine 1
+break_fuel_tank 1
+repair_fuel_tank 1
+fill_tank 1 60
+start_engine
+wait 10
+get_fuel_quantity
+stop_engine
+list_fuel_tanks

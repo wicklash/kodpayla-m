@@ -1,11 +1,18 @@
-open_valve
-add_fuel_tank 60 1
-connect_fuel_tank_to_engine 1
-break_fuel_tank 1
-repair_fuel_tank 1
-fill_tank 1 60
 start_engine
+open_valve
+add_fuel_tank 30 1
+add_fuel_tank 40 2
+connect_fuel_tank_to_engine 1
+connect_fuel_tank_to_engine 2
 wait 10
-get_fuel_quantity
-stop_engine
+UPDATE
+wait 5
+give_back_fuel 20
+print_tank_info 1
+print_fuel_tank_count
 list_fuel_tanks
+list_connected_tanks
+stop_simulation
+
+
+
